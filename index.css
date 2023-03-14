@@ -1,0 +1,17 @@
+#map {
+    width : 100%;
+    text-align : center;
+}
+
+datalist {
+    display : flex;
+    flex-direction : column;
+    justify-content : space-between;
+    writing-mode : vertical-lr;
+    width : 99%;
+    text-align : center;
+}
+
+.listening-rect {
+    fill : transparent;
+}
