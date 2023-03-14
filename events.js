@@ -10,7 +10,8 @@ d3.json('https://raw.githubusercontent.com/martynafford/natural-earth-geojson/ma
         .attr("stroke", "white")
         .style('stroke-width', 0)
         .style("opacity", 0.6)
-        .attr("id", (d) => { return d.properties.NAME_CIAWF })
+        .attr("id", (d) => { 
+            return d.properties['ADM0_A3'] })
         map_svg.selectAll("path")
         .on("mouseover", function(event) {
             if (selected == this) {
@@ -54,46 +55,34 @@ d3.json('https://raw.githubusercontent.com/martynafford/natural-earth-geojson/ma
     })
 
 
-d3.csv("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv")
-    .then(csv => {
-        console.log('data loaded.')
-        date = '2022-01-03'
-        today = csv.filter((d) =>
-            { return d.date == date } )
 
-        console.log(today)
-
-
-
-    } )
-
-/*
-
-d3.csv('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/cases_deaths/total_cases_per_million.csv')
+d3.csv('https://raw.githubusercontent.com/dynastydi/owid-covid/main/total_cases_per_million.csv')
     .then(csv => { 
         let total = csv
-        //d3.csv('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/cases_deaths/new_cases.csv')
-        d3.csv('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/cases_deaths/new_cases_per_million.csv')
+        d3.csv('https://raw.githubusercontent.com/dynastydi/owid-covid/main/new_cases_per_million.csv')
             .then((csv) => {
                 function update_date(date) {
                     let today_total = total.filter((d) =>
                         { return d.date == date; } )
                     let today_new = csv.filter((d) =>
                         { return d.date == date; } )
+                    //console.log(today_total[0]['FRA'])
                     map_svg.selectAll("path")
                             .transition()
                             .duration(150)
                             .attr("fill", d => {
-                                return colours[Math.round(today_total[0][d.properties.NAME_CIAWF] / 100000)]
+                                return colours[Math.round(today_total[0][d.properties['ADM0_A3']] / 10)]
                                 })
-                        map_svg.selectAll("#marker")
-                            .transition()
-                            .duration(150)
-                            .attr("r", function(d) {
-                                let num = today_new[0][d.properties.NAME_CIAWF] 
-                                if (this.hasAttribute("transform")) { return num / 200 }
-                            } )
-                }
+                    map_svg.selectAll("#marker")
+                        .transition()
+                        .duration(150)
+                        .attr("r", function(d) {
+                            let num = today_new[0][d.properties['ADM0_A3']] 
+
+                            if (this.hasAttribute("transform") && typeof(num) != 'undefined') { 
+                                return num * 50}
+                        } )
+                    }
 
 
                 var parser = d3.timeParse("%Y-%m-%d")
@@ -102,10 +91,12 @@ d3.csv('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/
                         { return parser(d.date); } ) )
                     .range([0, 600]);
                 
+                
                 var line_y = d3.scaleLinear()
                     .domain(d3.extent(total, function(d)
-                        { return d.World * 1.1; }))
+                        { return d.GBR * 1.1; }))
                     .range([150, 0])
+                    
                 line.append("g")
                     .attr("id", "dateaxis")
                     .attr("transform", "translate(50, 150)")
@@ -120,10 +111,12 @@ d3.csv('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/
                     .attr("fill", "none")
                     .attr("stroke", "steelblue")
                     .attr("stroke-width", 1.5)
+                /*
                     .attr("d", d3.line()
-                        .x(function(d) { return line_x(parser(d.date)) })
+                        .x(function(d) { 
+                            return line_x(parser(d.date)) })
                         .y(function(d) { return line_y(d.World) })
-                    )
+                    )*/
                     .attr("transform", "translate(50, 0)")
                 line_svg.append("g")
                     .append("rect")
@@ -224,13 +217,8 @@ d3.csv('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/
                                     .x(function(d) { return line_x(parser(d.date)) })
                                     .y(function(d) { return line_y(d[country_name]) }) )
                             
-                            let scat_x = d3.scaleLinear()
-                                .domain(d3.extent(total, function(d)
-                                    { return d[country_name * 1.1l { ))
-                            let scat_y = 
                         }
                     })
                     
             })
     })
-    */
