@@ -135,4 +135,3 @@ function yaw_rot(direction) {
     } , 0); }
 }
 
-let selected = null
