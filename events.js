@@ -34,6 +34,8 @@ Promise.all([
     d3.csv('https://raw.githubusercontent.com/dynastydi/owid-covid/main/gdp.csv')
 ])
     .then(files => { 
+        let today_new = null
+        let today_total = null
         let total = files[0]
         let daily = files[1]
         let gdp = files[2]
@@ -44,9 +46,9 @@ Promise.all([
         function update_date(date) {
             d3.select("#datebox")
                 .text(date)
-            let today_total = total.filter((d) =>
+            today_total = total.filter((d) =>
                 { return d.date == date; } )
-            let today_new = daily.filter((d) =>
+            today_new = daily.filter((d) =>
                 { return d.date == date; } )
             sel_new = today_new[0][selected]
             sel_tot = today_total[0][selected]
@@ -200,8 +202,8 @@ Promise.all([
             let geo = d3.select("#geo" + code)
             let dot = d3.select("#dot" + code)
             if (selected == code) {
-                geo.style("stroke", "orange").raise()
-                dot.style("fill", "orange").raise()
+                geo.style("stroke", "red").raise()
+                dot.style("fill", "red").raise()
             }
             else {
                 geo.style("stroke", "transparent")
@@ -223,10 +225,10 @@ Promise.all([
                 d3.select("#linetitle")
                     .text(code)
 
-                geo.style("stroke", "orange").raise()
+                geo.style("stroke", "red").raise()
                 
                 dot.style("fill", "white")
-                    .style("stroke", "orange")
+                    .style("stroke", "red")
                     .raise()
 
                 let line_y = d3.scaleLinear()
@@ -258,16 +260,20 @@ Promise.all([
             .enter()
             .append("circle")
                 .attr("id", (d) => { return "dot" + d; } )
-                .attr("r", 5)
+                .attr("r", (d) => 
+                    { let r = scat_x(gdp[0][d])
+                        if (r > 0) { return 5; }
+                        else { return 0; } })
                 .style("opacity", 0.75)
                 .style("fill", "skyblue")
                 .style("stroke-width", 2)
                 .style("stroke", "skyblue")
                 .attr("transform", "translate(100, 50)")
             .on("mousemove", function(event) {
+                let code = d3.select(this).attr("id").slice(3)
                 scat_tip
-                    .html(d3.select(this).attr("id").slice(3))
-                    .style("left", (d3.pointer(event)[0] + 700) + "px")
+                    .html(code + "<br>" + Math.round(today_new[0][code]) + " new / mil.")
+                    .style("left", (d3.pointer(event)[0] + 650) + "px")
                     .style("top", (d3.pointer(event)[1] + 50) + "px")
             })
             .on("mouseover", function(event) {
@@ -322,8 +328,9 @@ Promise.all([
         */
         map_svg.selectAll("path")
             .on("mousemove", function(event) {
+                let code = d3.select(this).attr("id").slice(3)
                 map_tip
-                    .html(d3.select(this).attr("id").slice(3))
+                    .html(code + "<br>" + Math.round(today_new[0][code]) +" new / mil.")
                     .style("left", (d3.pointer(event)[0] + 70) + "px")
                     .style("top", (d3.pointer(event)[1]) + "px")
             } )
@@ -344,10 +351,10 @@ Promise.all([
             .attr("d", d3.line()
                 .x(function(d) { return line_x(parser(d.date)) })
                 .y(function(d) { return line_y(d.GBR) }) )
-        d3.select("#geoGBR").style("stroke", "orange").raise()
+        d3.select("#geoGBR").style("stroke", "red").raise()
                 
         d3.select("#dotGBR").style("fill", "white")
-            .style("stroke", "orange")
+            .style("stroke", "red")
             .raise()
             
     })
