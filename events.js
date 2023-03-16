@@ -146,7 +146,7 @@ Promise.all([   // fetch all OWID csvs (personally processed & hosted)
                     .attr("width", "1px")   
                     .attr("transform", "translate(" + xpos + ", 0)")
             
-                line_tip.html(d3.timeFormat("%Y-%m-%d")(date))
+                line_tip.html(d3.timeFormat("%Y-%m-%d")(line_x.invert(pos[0] - 50)))
                     .style("opacity", 1)
                     .style("left", (d3.pointer(event)[0] + 100) + "px")
                     .style("top", (d3.pointer(event)[1] + 600) + "px")
