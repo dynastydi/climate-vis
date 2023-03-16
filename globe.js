@@ -1,10 +1,4 @@
-const colours = ["#000000", "#174215", "#53802A", "#B0BD40", "#F8C658", "#FFA351", "#FF754D", "#FF4C57"]
-
-let cases = d3.csv('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/cases_deaths/new_cases_per_million.csv')
-
-let data = {}
-//let width = d3.select("#content canvas").node().getBoundingClientRect().width
-//let height = 500
+// Globe projection & map setup
 
 let map_svg = d3.select("#map")
     .append("svg")
@@ -35,7 +29,7 @@ let globe = map_svg.append("circle")
     .style("opacity", "0.9")
 
 
-
+// drag & zoom events
 map_svg.call(d3.drag().on('drag', (event) => {
     const rotate = projection.rotate()
     const k = 75 / projection.scale()
@@ -68,7 +62,7 @@ map_svg.call(d3.drag().on('drag', (event) => {
       }
     }))
 
-
+// UNUSED (but working) TRAVERSAL FUNCTIONS
 function reset() {
     if (!moving) {
         moving = true

@@ -2,11 +2,6 @@
 font-family : Helvetica;
 }
 
-#map {
-    width : 100%;
-    text-align : center;
-}
-
 
 .listening-rect {
     fill : transparent;

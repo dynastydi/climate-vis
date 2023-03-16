@@ -1,8 +1,10 @@
-let map = map_svg.append('g')
-d3.json('https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master/110m/cultural/ne_110m_admin_0_countries.json')
-    .then(function(json) {
+// DATA LOADING && EVENT SETUP
 
-        map.append("g")
+let map = map_svg.append('g')   // create map object
+d3.json('https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master/110m/cultural/ne_110m_admin_0_countries.json')
+    .then(function(json) {      // fetch geodata
+
+        map.append("g")         // append geo objects
         .attr("class", "countries" )
         .selectAll("path")
         .data(json.features)
@@ -12,9 +14,9 @@ d3.json('https://raw.githubusercontent.com/martynafford/natural-earth-geojson/ma
         .style('stroke-width', 2)
         .style("opacity", 0.6)
         .attr("id", (d) => { 
-            return 'geo' + d.properties['ADM0_A3'] })
+            return 'geo' + d.properties['ADM0_A3'] })   // id using ISO for lookup
 
-        map.append("g")
+        map.append("g")         // append centroid markers
         .attr("class", "countries" )
         .selectAll("path")
         .data(json.features)
@@ -26,9 +28,10 @@ d3.json('https://raw.githubusercontent.com/martynafford/natural-earth-geojson/ma
                 return "translate(" + c + ")" }} )
         .style("fill", "yellow")
         .style("opacity", 0.75)
+        .style("pointer-events", "none")    // ban from pointer events
     })
 
-Promise.all([
+Promise.all([   // fetch all OWID csvs (personally processed & hosted)
     d3.csv('https://raw.githubusercontent.com/dynastydi/owid-covid/main/total_cases_per_million.csv'),
     d3.csv('https://raw.githubusercontent.com/dynastydi/owid-covid/main/new_cases_per_million.csv'),
     d3.csv('https://raw.githubusercontent.com/dynastydi/owid-covid/main/gdp.csv')
@@ -40,36 +43,34 @@ Promise.all([
         let daily = files[1]
         let gdp = files[2]
         
-        const iso = Object.keys(gdp[0]).slice(1)
-        console.log(iso)
+        const iso = Object.keys(gdp[0]).slice(1)    // create array of ISO keys
         
-        function update_date(date) {
-            d3.select("#datebox")
-                .text(date)
+        const map_heat = d3.scaleSequential()       // generate heatmap 
+            .interpolator(d3.interpolateInferno)
+            .domain(d3.extent(total, (d) =>
+                { return d.CYP * 1; }))             // use Cyprus for extent - highest case rate per capita
+        
+        function update_date(date) {                // date update function to apply to all elements
+            d3.select("#datebox")                   
+                .text(date) // show today's date
             today_total = total.filter((d) =>
-                { return d.date == date; } )
+                { return d.date == date; } )    // filter for data today
             today_new = daily.filter((d) =>
                 { return d.date == date; } )
             sel_new = today_new[0][selected]
             sel_tot = today_total[0][selected]
             d3.select("#newbox")
-                .text(Math.round(sel_new, 2) + " new cases / mil today.")
+                .text(Math.round(sel_new, 2) + " new cases / mil today.")   // describe results
             d3.select("#totalbox")
                 .text(Math.round(sel_tot, 2) + " total cases / mil.")
 
-            let map_heat = d3.scaleSequential()
-                .interpolator(d3.interpolateInferno)
-                .domain(d3.extent(total, (d) =>
-                    { return d.CYP * 1; }))
-
-            map_svg.selectAll("path")
+            map_svg.selectAll("path")       // heatmap transition dependent on total cases
                     .transition()
                     .duration(150)
                     .attr("fill", d => {
                         return map_heat(today_total[0][d.properties['ADM0_A3']])
-                        //return colours[Math.round(today_total[0][d.properties['ADM0_A3']] / 100000)]
                         })
-            map_svg.selectAll("#marker")
+            map_svg.selectAll("#marker")    // marker radius transition dependent on new cases
                 .transition()
                 .duration(150)
                 .attr("r", function(d) {
@@ -78,40 +79,29 @@ Promise.all([
                     if (this.hasAttribute("transform") && typeof(num) != 'undefined') { 
                         return num / 200}
                 } )
-            scatter_svg.selectAll("circle")
-                //.data(iso)
-                //.join("circle")
+            scatter_svg.selectAll("circle") // scattermap transition dependent on total cases
                 .transition()
                 .duration(150)
                 .attr("cy", (d) =>
                     { return scat_y(today_total[0][d])} )
                 .attr("cx", (d) =>
                     { return scat_x(gdp[0][d])})
-                //.attr("cy"
-            /*
-            let scat_y = d3.scaleLinear()
-                .domain(d3.extent(today_total, function(d) 
-                    { return Object.values(d); }))
-                .range([300, 0]);
-            d3.select("#scatoutcome")
-                .call(d3.axisLeft(scat_y))
-            */
             }
             
 
 
         var parser = d3.timeParse("%Y-%m-%d")
-        var line_x = d3.scaleTime()
+        var line_x = d3.scaleTime()         // timescale for linegraph x-axis
             .domain(d3.extent(total, function(d)
                 { return parser(d.date); } ) )
             .range([0, 600]);
         
-        
-        var line_y = d3.scaleLinear()
+        var line_y = d3.scaleLinear()       // scale total / mil for linegraph y-axis
             .domain(d3.extent(total, function(d)
                 { return d.GBR * 1.1; }))
             .range([150, 0])
             
+        // apply initial axis and path to linegraph
         line.append("g")
             .attr("id", "dateaxis")
             .attr("transform", "translate(100, 150)")
@@ -127,6 +117,8 @@ Promise.all([
             .attr("stroke", "steelblue")
             .attr("stroke-width", 1.5)
             .attr("transform", "translate(100, 0)")
+        
+        // apply interactions to linegraph
         line_svg.append("g")
             .append("rect")
             .attr("id", "dateline")
@@ -134,7 +126,6 @@ Promise.all([
             .attr("stroke-width", "1px")
             .attr("stroke", "orange")
             .attr("height", 150)
-        
         line_svg.append("g")
             .append("rect")
             .attr("id", "dateselect")
@@ -142,9 +133,8 @@ Promise.all([
             .attr("stroke-width", "1px")
             .attr("stroke", "red")
             .attr("height", 150)
-        
         line_svg.append("rect")
-            .attr("class", "listening-rect")
+            .attr("class", "listening-rect")    // listening rectangle for click & drag along x-axis
             .attr("width", 600)
             .attr("height", 150)
             .attr("transform", "translate(50, 0)")
@@ -191,7 +181,9 @@ Promise.all([
                     .attr("transform", "translate(" + xpos + ", 0)");
                 update_date(d3.timeFormat("%Y-%m-%d")(date))
             }))
-        function m_over (code) {
+
+        // mouse events for both scatter & map
+        function m_over (code) {    // use ISO code for bidirectional lookup
             let geo = d3.select("#geo" + code)
             let dot = d3.select("#dot" + code)
             geo.style("stroke", "white").raise()
@@ -245,12 +237,11 @@ Promise.all([
                 update_date(d3.select("#datebox").text())    
             }
         } 
-
+        
+        // scatter axis & data
         var scat_x = d3.scaleLinear()
             .domain([0, gdp[0].QAT])
             .range([0, 500]);
-        console.log(scat_x.domain())
-        console.log(gdp[0].QAT)
         scatter.append("g")
             .attr("transform", "translate(100, 550)")
             .call(d3.axisBottom(scat_x));
@@ -269,7 +260,7 @@ Promise.all([
                 .style("stroke-width", 2)
                 .style("stroke", "skyblue")
                 .attr("transform", "translate(100, 50)")
-            .on("mousemove", function(event) {
+            .on("mousemove", function(event) {  // apply events
                 let code = d3.select(this).attr("id").slice(3)
                 scat_tip
                     .html(code + "<br>" + Math.round(today_new[0][code]) + " new / mil.")
@@ -280,7 +271,6 @@ Promise.all([
                 scat_tip
                     .style("opacity", 1)
                 m_over(d3.select(this).attr("id").slice(3))
-                //tooltip
             })
             .on("mouseout", function(event) {
                 m_out(d3.select(this).attr("id").slice(3))
@@ -289,49 +279,14 @@ Promise.all([
             })
             .on("click", function(event) {
                 m_click(d3.select(this).attr("id").slice(3)) } )
-        /*
-
-        scatter_svg.append("rect")
-            .attr("class", "listening-rect")
-            .attr("width", 500)
-            .attr("height", 500)
-            .attr("transform", "translate(50, 50)")
-            //.call(d3.brush())
-                //.extent([50,50], [100, 100]))
-    
-        const brush = d3.brush()
-            .on("start brush end", brusher)
-            .extent([[50, 50], [550, 550]])
-        scatter_svg.call(brush)
         
-        function brusher (event) {
-            let value = []
-            let select = event.selection
-            let dots = scatter_svg.selectAll("circle")
-            if (select) {
-                const [[x0, y0], [x1, y1]] = select
-                dots
-                    //.style("fill", "skyblue")
-                    //.filter(d => x0 <= scat_x(d.cx) && scat_x(d.cx) < x1 && y0 <= scat_y(d.cy) && scat_y(d.cy) < y1)
-                    .style("fill", "orange")
-                    .attr("r", function(d) {console.log(d)})
-                    .data();
-
-                
-            } else {
-                dots
-                    .style("fill", "skyblue")
-            }
-            scatter_svg.property("value", value).dispatch("input");
-        }
-        //scatter_svg.call(brush)
-        */
+        // apply equivalent events to map
         map_svg.selectAll("path")
             .on("mousemove", function(event) {
                 let code = d3.select(this).attr("id").slice(3)
                 map_tip
                     .html(code + "<br>" + Math.round(today_new[0][code]) +" new / mil.")
-                    .style("left", (d3.pointer(event)[0] + 70) + "px")
+                    .style("left", (d3.pointer(event)[0] - 75) + "px")
                     .style("top", (d3.pointer(event)[1]) + "px")
             } )
             .on("mouseover", function(event) {
@@ -343,6 +298,7 @@ Promise.all([
             .on("click", function(event) {
                 m_click(d3.select(this).attr("id").slice(3)) } )
 
+        // set up with GBR as starting point
         let selected = 'GBR'
         update_date("2020-01-01")
         d3.select("#lineoutcome")
