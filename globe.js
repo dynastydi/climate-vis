@@ -2,8 +2,8 @@
 
 let map_svg = d3.select("#map")
     .append("svg")
-    .attr("width", 600)
-    .attr("height", 600)
+    .attr("width", 500)
+    .attr("height", 500)
 let projection = d3.geoOrthographic()
     .scale(150)
     .center([0, 0])
@@ -20,13 +20,13 @@ let speed = 1;
 let moving = false;
 
 let globe = map_svg.append("circle")
-    .attr("fill", "skyblue")
+    .attr("fill", "white")
     .attr("stroke", "#000")
     .attr("stroke-width", "0.2")
     .attr("cx", 300)
     .attr("cy", 300)
     .attr("r", scale)
-    .style("opacity", "0.9")
+    .style("opacity", "0.2")
 
 
 // drag & zoom events
