@@ -88,9 +88,12 @@ Promise.all([
                         val = country.filter((d) => { return d.Year == year; })
                         if (val.length !== 0)
                             { return ghg_heat(val[0]['GHG emissions'])}  }})
-            
-            
-
+            d3.select('#oilbox')
+                .text(entry['Oil production (TWh)'].toFixed(2) + " TWh oil")
+            d3.select('#gasbox')
+                .text(entry['Gas production (TWh)'].toFixed(2) + "TWh gas")
+            d3.select('#coalbox')
+                .text(entry['Coal production (TWh)'].toFixed(2) + "TWh coal")
 
             /*
             today_total = total.filter((d) =>
@@ -145,12 +148,12 @@ Promise.all([
                 [
                     'CO\u2082', 
                     entry['Annual CO\u2082 emissions (zero filled)'],
-                    'magenta'
+                    'crimson'
                 ],
                 [
                     'CH\u2084', 
                     entry['Annual methane emissions'],
-                    'skyblue'
+                    'magenta'
                 ],
                 [
                     'N\u2082O', 
@@ -159,6 +162,15 @@ Promise.all([
                 ]
             ]
             
+            d3.select('#co2box')
+                .text(Math.round(entry['Annual CO\u2082 emissions (zero filled)'] / 100000) / 10 + ' Mt CO\u2082')
+            d3.select('#ch4box')
+                .text(Math.round(entry['Annual methane emissions'] / 100000) / 10 + ' Mt CH\u2084')
+            d3.select('#n2obox')
+                .text(Math.round(entry['Annual nitrous oxide emissions'] / 100000) / 10+ ' Mt N\u20820')
+            d3.select('#totalbox')
+                .text(Math.round(entry['GHG emissions'] / 100000) / 10 + ' Mt total')
+
             var chart = d3.pie()
                 .value(function(d) { 
                     return d[1]; })
@@ -360,8 +372,21 @@ Promise.all([
                 update_date(d3.select("#datebox").text())    
             }
         } 
+        
+        map_svg.selectAll("circle")
+            .on("mousemove", function(event) {
+                temp = Number(global_year.Temperature).toFixed(2)
+                map_tip
+                    .html(temp + "\u00B0C")
+                    .style("left", (d3.pointer(event)[0] - 75) + "px")
+                    .style("top", (d3.pointer(event)[1]) + "px")
 
-
+            }
+            )
+            .on("mouseover", function(event) {
+                map_tip.style("opacity", 1) })
+            .on("mouseout", function(event) {
+                map_tip.style("opacity", 0) })
         // apply equivalent events to map
         map_svg.selectAll("path")
             .on("mousemove", function(event) {
